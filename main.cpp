@@ -50,12 +50,6 @@ void renderStartScreen() {
     SDL_DestroyTexture(startButtonImage);
 }
 
-
-
-
-
-
-
 // Hàm tải ảnh từ file sử dụng SDL_image
 SDL_Texture* loadTexture(const string& path) {
     SDL_Texture* texture = IMG_LoadTexture(renderer, path.c_str());
@@ -80,14 +74,54 @@ void shuffleBoard() {
 
 // Hàm vẽ giao diện game, bao gồm lưới với đường viền cho mỗi ô
 void renderGame() {
+    // Xóa màn hình với màu trắng
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderClear(renderer);
 
+    // Vẽ các ô của lưới
+    for (int i = 0; i < ROWS; i++) {
+        for (int j = 0; j < COLS; j++) {
+            int index = i * COLS + j;
+            SDL_Rect rect = { j * CARD_SIZE, i * CARD_SIZE, CARD_SIZE, CARD_SIZE };
+
+            // Nếu card đã được lật, hiển thị ảnh
+            if (flipped[index]) {
+                SDL_RenderCopy(renderer, images[board[index]], nullptr, &rect);
+            } else {
+                // Nếu chưa lật, vẽ ô màu xanh
+                SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+                SDL_RenderFillRect(renderer, &rect);
+            }
+
+            // Vẽ đường viền cho ô (màu đen)
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+            SDL_RenderDrawRect(renderer, &rect);
+        }
+    }
+    SDL_RenderPresent(renderer);
 }
 
-// Hàm xử lý sự kiện nhấn chuột để lật card
+// Hàm xử lý khi người chơi click chuột
 void handleMouseClick(int x, int y) {
+   if (waiting) return;
 
+    int col = x / CARD_SIZE;
+    int row = y / CARD_SIZE;
+    int index = row * COLS + col;
+
+    // Nếu card đã được lật thì không xử lý
+    if (flipped[index]) return;
+
+    // Lật card được chọn
+    flipped[index] = true;
+    if (firstCard == -1) {
+        firstCard = index;
+    } else {
+        secondCard = index;
+        waiting = true;
+        waitStart = SDL_GetTicks();
     }
-
+}
 
 // Hàm kiểm tra xem hai card đã chọn có khớp hay không
 void checkMatch() {
@@ -104,10 +138,8 @@ int main(int argc, char* argv[]) {
 
     // Tải ảnh màn hình chờ
     startButtonImage = loadTexture("D:\\ảnh sdl\\image7.png");
-if (!startButtonImage) {
-    cout << "Lỗi: Không thể tải ảnh nút Start!" << endl;
-    return -1;
+    if (!startButtonImage) {
+        cout << "Lỗi: Không thể tải ảnh nút Start!" << endl;
+        return -1;
+    }
 }
-
-}
-
