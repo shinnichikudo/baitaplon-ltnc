@@ -5,7 +5,8 @@
 #include <algorithm>
 #include <ctime>
 #include "sound.h"  // Đã sửa lỗi và cập nhật sound.h
-
+#include <fstream>
+#include <SDL_ttf.h>
 using namespace std;
 
 const int SCREEN_WIDTH = 600;
@@ -21,13 +22,14 @@ SDL_Texture* winnerImage = nullptr;
 vector<SDL_Texture*> images;
 vector<int> board(ROWS * COLS, -1);
 vector<bool> flipped(ROWS * COLS, false);
-
+TTF_Font* font = nullptr; // Khai báo biến font
+SDL_Color textColor = {0, 0, 0, 255}; // Màu chữ (đen)
 int firstCard = -1, secondCard = -1;
 bool waiting = false;
 Uint32 waitStart = 0;
 bool gameStarted = false;
 bool gameWon = false;
-
+int flipCount = 0;  // Đếm số lần lật bài
 SoundManager sound;  // Đối tượng quản lý âm thanh
 
 SDL_Texture* loadTexture(const string& path) {
@@ -89,24 +91,7 @@ void renderGame() {
     SDL_RenderPresent(renderer);
 }
 
-void handleMouseClick(int x, int y) {
-    if (waiting) return;
 
-    int col = x / CARD_SIZE;
-    int row = y / CARD_SIZE;
-    int index = row * COLS + col;
-
-    if (index < 0 || index >= ROWS * COLS || flipped[index] || board[index] < 0) return;
-
-    flipped[index] = true;
-    if (firstCard == -1) {
-        firstCard = index;
-    } else {
-        secondCard = index;
-        waiting = true;
-        waitStart = SDL_GetTicks();
-    }
-}
 
 void checkMatch() {
     if (board[firstCard] != board[secondCard]) {
@@ -124,16 +109,81 @@ bool checkWin() {
     return true;
 }
 
+int readHighScore() {
+    ifstream file("highscore.txt");
+    int highScore = 9999;  // Mặc định số lớn để dễ cập nhật kỷ lục mới
+    if (file >> highScore) {
+        file.close();
+    }
+    return highScore;
+}
+
+void saveHighScore(int flips) {
+    int highScore = readHighScore();
+    if (flips < highScore) {  // Chỉ lưu nếu số lần lật ít hơn
+        ofstream file("highscore.txt");
+        file << flips;
+        file.close();
+    }
+}
+void renderText(const string& text, int x, int y) {
+    if (!font) font = TTF_OpenFont("arial.ttf", 24); // Load font Arial
+    if (!font) return;
+
+    SDL_Surface* textSurface = TTF_RenderText_Solid(font, text.c_str(), textColor);
+    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+
+    SDL_Rect textRect = {x, y, textSurface->w, textSurface->h};
+    SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+
+    SDL_FreeSurface(textSurface);
+    SDL_DestroyTexture(textTexture);
+}
 void renderWinScreen() {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderClear(renderer);
 
     SDL_Rect rect = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
     SDL_RenderCopy(renderer, winnerImage, nullptr, &rect);
-    SDL_RenderPresent(renderer);
 
-    SDL_Delay(2000);
-    cout << "🎉 Chúc mừng! Bạn đã chiến thắng!" << endl;
+    saveHighScore(flipCount);
+    int bestRecord = readHighScore();
+
+    string flipText = "So lan lat: " + to_string(flipCount);
+    string recordText = "Best Record: " + to_string(bestRecord) + " flips";
+
+    // Căn giữa màn hình
+    int centerX = SCREEN_WIDTH / 2;
+    int centerY = SCREEN_HEIGHT / 2;
+
+
+
+    // Đảm bảo text được hiển thị
+    renderText(flipText, centerX - 100, centerY - 50);
+    renderText(recordText, centerX - 120, centerY + 10);
+
+    SDL_RenderPresent(renderer);
+    SDL_Delay(3000);
+}
+void handleMouseClick(int x, int y) {
+    if (waiting) return;
+
+    int col = x / CARD_SIZE;
+    int row = y / CARD_SIZE;
+    int index = row * COLS + col;
+
+    if (index < 0 || index >= ROWS * COLS || flipped[index] || board[index] < 0) return;
+
+    flipped[index] = true;
+
+    if (firstCard == -1) {
+        firstCard = index;
+    } else {
+        secondCard = index;
+        waiting = true;
+        waitStart = SDL_GetTicks();
+        flipCount++;  // ✅ Tăng số lần lật khi chọn đủ 1 cặp
+    }
 }
 
 int main(int argc, char* argv[]) {
@@ -145,6 +195,18 @@ int main(int argc, char* argv[]) {
     if (!sound.init()) {
         cout << "❌ Lỗi khởi tạo âm thanh!" << endl;
         return -1;
+    }
+    // Khởi tạo SDL_ttf
+    if (TTF_Init() == -1) {
+        cout << "SDL_ttf could not initialize! SDL_ttf Error: " << TTF_GetError() << endl;
+        return 1;
+    }
+
+    // Load font
+    TTF_Font* font = TTF_OpenFont("arial.ttf", 28);  // Cần đúng đường dẫn file
+    if (!font) {
+        cout << "Failed to load font! SDL_ttf Error: " << TTF_GetError() << endl;
+        return 1;
     }
 
     sound.playBackgroundMusic();  // Phát nhạc nền khi vào game
@@ -189,11 +251,14 @@ int main(int argc, char* argv[]) {
             }
 
             if (checkWin()) {
-                sound.stopBackgroundMusic();  // Dừng nhạc nền
-                sound.playWinSound();         // Phát âm thanh khi chiến thắng
-                renderWinScreen();
-                running = false;
-            } else {
+    sound.stopBackgroundMusic();  // Dừng nhạc nền
+    sound.playWinSound();         // Phát âm thanh khi chiến thắng
+    renderWinScreen();
+
+    saveHighScore(flipCount);  // ✅ Lưu kỷ lục nếu có
+
+    SDL_Delay(2000);  // ✅ Chờ 2 giây trước khi thoát game
+    running = false;} else {
                 renderGame();
             }
         }
