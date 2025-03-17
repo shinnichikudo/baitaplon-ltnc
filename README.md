@@ -15,15 +15,7 @@ Trên Windows:
 Tải SDL2, SDL2_image, SDL2_ttf, SDL2_mixer từ trang chủ: https://github.com/libsdl-org/SDL
 Giải nén và đặt thư viện vào thư mục dự án.
 Cấu hình trình biên dịch để liên kết với các thư viện SDL2.
-Trên Linux (Ubuntu):
-sh
-sudo apt update
-sudo apt install libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev libsdl2-mixer-dev
-Trên macOS:
-sh
-Sao chép
-Chỉnh sửa
-brew install sdl2 sdl2_image sdl2_ttf sdl2_mixer
+
 ## 3. Biên dịch và chạy game
 sh
 Sao chép
@@ -35,7 +27,7 @@ Chạy game bằng cách mở ứng dụng hoặc sử dụng dòng lệnh như 
 
 Màn hình bắt đầu sẽ hiển thị với nút "Start".
 Nhấn vào "Start" để bắt đầu trò chơi.
-
+![Start Screen](background.jpg)
 
 # 🎮 Cách chơi
 ## 🎯 Mục tiêu
@@ -56,11 +48,11 @@ Khi tất cả cặp hình được ghép xong, bạn chiến thắng.
 Ghép đúng tất cả cặp hình trước khi hết giờ.
 Hiển thị màn hình chúc mừng và số lần lật bài.
 Nếu đạt số lần lật thấp nhất, điểm sẽ được lưu vào highscore.txt.
-
+![Win Screen](winner.png)
 ### 😢 Thất bại
 Hết 60 giây mà chưa ghép xong tất cả cặp hình.
 Hiển thị màn hình "Game Over" và tùy chọn chơi lại.
-
+![Game Over](gameover.jpg)
 ##🎨 Đồ họa game
 Game sử dụng hình ảnh được tải bằng SDL2_image.
 Màn hình nền, các thẻ bài, nút bấm đều được hiển thị bằng SDL_Texture.
