@@ -19,9 +19,9 @@ public:
         }
 
         // T?i t?ng âm thanh riêng bi?t
-        backgroundMusic = Mix_LoadMUS("D:/sound sdl/sound1.mp3");
-        startSound = Mix_LoadWAV("D:/sound sdl/sound2.wav");
-        winSound = Mix_LoadWAV("D:/sound sdl/sound2.mp3");
+        backgroundMusic = Mix_LoadMUS("sound sdl/sound1.mp3");
+        startSound = Mix_LoadWAV("sound sdl/sound2.wav");
+        winSound = Mix_LoadWAV("sound sdl/sound2.mp3");
 
         if (!backgroundMusic || !startSound || !winSound) {
             std::cout << "? L?i t?i âm thanh: " << Mix_GetError() << std::endl;
