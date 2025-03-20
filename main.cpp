@@ -4,61 +4,73 @@
 #include <vector>
 #include <algorithm>
 #include <ctime>
-#include "sound.h"  // Đã sửa lỗi và cập nhật sound.h
+#include "sound.h"  // Thư viện xử lý âm thanh riêng
 #include <fstream>
 #include <SDL_ttf.h>
+
 using namespace std;
-const int MAX_TIME = 60;  // ⏳ Giới hạn thời gian (60 giây)
+
+// Khai báo các hằng số cho game
+const int MAX_TIME = 60;  // Giới hạn thời gian chơi (giây)
 Uint32 startTime = 0;     // Lưu thời điểm bắt đầu game
 const int SCREEN_WIDTH = 600;
 const int SCREEN_HEIGHT = 600;
-const int ROWS = 4, COLS = 4;
-const int CARD_SIZE = 150;
-const int TOTAL_CARDS = ROWS * COLS / 2;
+const int ROWS = 4, COLS = 4;  // Số hàng và cột của bàn cờ
+const int CARD_SIZE = 150;    // Kích thước mỗi ô bài
+const int TOTAL_CARDS = ROWS * COLS / 2;  // Tổng số cặp bài
 const int BUTTON_WIDTH = 200;
 const int BUTTON_HEIGHT = 100;
+
+// Biến trạng thái của game
 int matchedCount = 0;
 bool cardShown[ROWS * COLS] = {false};
 bool cardMatched[ROWS * COLS] = {false};
 bool replayRequested = false;
-SDL_Window* window = nullptr;
 bool justStarted = false;
+
+SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
 SDL_Texture* startButtonImage = nullptr;
 SDL_Texture* winnerImage = nullptr;
+
 vector<SDL_Texture*> images;
-vector<int> board(ROWS * COLS, -1);
-vector<bool> flipped(ROWS * COLS, false);
-TTF_Font* font = nullptr; // Khai báo biến font
-SDL_Color textColor = {0, 0, 0, 255}; // Màu chữ (đen)
+vector<int> board(ROWS * COLS, -1);  // Lưu thứ tự bài đã xáo
+vector<bool> flipped(ROWS * COLS, false);  // Trạng thái lật của các lá bài
+
+TTF_Font* font = nullptr;  // Font chữ
+SDL_Color textColor = {0, 0, 0, 255}; // Màu chữ đen
+
 int firstCard = -1, secondCard = -1;
 bool waiting = false;
 Uint32 waitStart = 0;
 bool gameStarted = false;
 bool gameWon = false;
-int flipCount = 0;  // Đếm số lần lật bài
+int flipCount = 0;  // Biến đếm số lần lật bài
+
 SoundManager sound;  // Đối tượng quản lý âm thanh
 
+// Hàm tải ảnh và tạo texture
 SDL_Texture* loadTexture(const string& path) {
     SDL_Texture* texture = IMG_LoadTexture(renderer, path.c_str());
     if (!texture) {
-        cout << "❌ Lỗi tải ảnh từ " << path << ": " << IMG_GetError() << endl;
+        cout << "Loi tai anh tu " << path << ": " << IMG_GetError() << endl;
         exit(-1);
     }
     return texture;
 }
 
+// Hiển thị màn hình bắt đầu với nút Start
 void renderStartScreen() {
     SDL_Texture* background = loadTexture("background.jpg");
     SDL_Texture* startButton = loadTexture("image7.png");
 
     SDL_Rect bgRect = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
- SDL_Rect startButtonRect = {
-    (SCREEN_WIDTH - 200) / 2,
-    (SCREEN_HEIGHT - 100) / 2 + 80,  // 👈 Dịch xuống 20 pixel
-    200,
-    100
-};
+    SDL_Rect startButtonRect = {
+        (SCREEN_WIDTH - 200) / 2,
+        (SCREEN_HEIGHT - 100) / 2 + 80,
+        200,
+        100
+    };
 
     SDL_RenderCopy(renderer, background, nullptr, &bgRect);
     SDL_RenderCopy(renderer, startButton, nullptr, &startButtonRect);
@@ -68,8 +80,9 @@ void renderStartScreen() {
     SDL_DestroyTexture(startButton);
 }
 
+// Hàm vẽ chữ lên màn hình
 void renderText(const string& text, int x, int y) {
-    if (!font) font = TTF_OpenFont("arial.ttf", 24); // Load font Arial
+    if (!font) font = TTF_OpenFont("arial.ttf", 24);
     if (!font) return;
 
     SDL_Surface* textSurface = TTF_RenderText_Solid(font, text.c_str(), textColor);
@@ -81,28 +94,28 @@ void renderText(const string& text, int x, int y) {
     SDL_FreeSurface(textSurface);
     SDL_DestroyTexture(textTexture);
 }
+
+// Vẽ thời gian đếm ngược ở góc màn hình
 void renderTime(Uint32 startTime) {
     if (!font) {
         font = TTF_OpenFont("arial.ttf", 24);
         if (!font) {
-            cout << "Lỗi tải font Arial: " << TTF_GetError() << endl;
+            cout << "Loi tai font Arial: " << TTF_GetError() << endl;
             return;
         }
     }
 
-    if (!gameStarted) return;  // Không hiển thị nếu game chưa bắt đầu
+    if (!gameStarted) return;
 
-    // Tính thời gian còn lại
     Uint32 elapsedTime = (SDL_GetTicks() - startTime) / 1000;
     int countdown = MAX_TIME - elapsedTime;
-
-    if (countdown <= 0) countdown = 0;  // Không hiển thị số âm
+    if (countdown <= 0) countdown = 0;
 
     string timeText = "Time: " + to_string(countdown) + "s";
     renderText(timeText, 10, 10);
 }
 
-
+// Xáo trộn thứ tự các cặp bài
 void shuffleBoard() {
     vector<int> pairs;
     for (int i = 0; i < TOTAL_CARDS; i++) {
@@ -115,6 +128,7 @@ void shuffleBoard() {
     }
 }
 
+// Vẽ giao diện bàn chơi
 void renderGame() {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderClear(renderer);
@@ -135,12 +149,12 @@ void renderGame() {
             SDL_RenderDrawRect(renderer, &rect);
         }
     }
-       renderTime(startTime);
+
+    renderTime(startTime);
     SDL_RenderPresent(renderer);
 }
 
-
-
+// Kiểm tra xem hai lá bài có khớp không
 void checkMatch() {
     if (board[firstCard] != board[secondCard]) {
         flipped[firstCard] = false;
@@ -150,6 +164,7 @@ void checkMatch() {
     waiting = false;
 }
 
+// Kiểm tra xem người chơi đã thắng chưa
 bool checkWin() {
     for (bool flip : flipped) {
         if (!flip) return false;
@@ -157,23 +172,27 @@ bool checkWin() {
     return true;
 }
 
+// Đọc điểm cao nhất từ file
 int readHighScore() {
     ifstream file("highscore.txt");
-    int highScore = 9999;  // Mặc định số lớn để dễ cập nhật kỷ lục mới
+    int highScore = 9999;
     if (file >> highScore) {
         file.close();
     }
     return highScore;
 }
 
+// Ghi điểm cao mới nếu ít lượt lật hơn
 void saveHighScore(int flips) {
     int highScore = readHighScore();
-    if (flips < highScore) {  // Chỉ lưu nếu số lần lật ít hơn
+    if (flips < highScore) {
         ofstream file("highscore.txt");
         file << flips;
         file.close();
     }
 }
+
+// Vẽ màn hình chiến thắng
 void renderWinScreen() {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderClear(renderer);
@@ -187,22 +206,20 @@ void renderWinScreen() {
     string flipText = "So lan lat: " + to_string(flipCount);
     string recordText = "Best Record: " + to_string(bestRecord) + " flips";
 
-    // Căn giữa màn hình
     int centerX = SCREEN_WIDTH / 2;
     int centerY = SCREEN_HEIGHT / 2;
 
-
-
-    // Đảm bảo text được hiển thị
     renderText(flipText, centerX - 100, centerY - 50);
     renderText(recordText, centerX - 120, centerY + 10);
-  renderText("Nhan R de choi lai", centerX - 100, centerY + 50);  // 👈 thêm dòng này
+    renderText("Nhan R de choi lai", centerX - 100, centerY + 50);
     SDL_RenderPresent(renderer);
     SDL_Delay(3000);
 }
+
+// Xử lý khi người dùng nhấn chuột vào bàn chơi
 void handleMouseClick(int x, int y) {
-      if (justStarted) {
-        justStarted = false;  // ✅ Bỏ qua click đầu tiên sau khi nhấn nút Start
+    if (justStarted) {
+        justStarted = false;
         return;
     }
     if (waiting) return;
@@ -221,69 +238,70 @@ void handleMouseClick(int x, int y) {
         secondCard = index;
         waiting = true;
         waitStart = SDL_GetTicks();
-        flipCount++;  // ✅ Tăng số lần lật khi chọn đủ 1 cặp
+        flipCount++;
     }
 }
+
+// Vẽ màn hình thua cuộc khi hết giờ
 void renderGameOverScreen() {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderClear(renderer);
 
-    // 📌 Load ảnh Game Over
     SDL_Texture* gameOverImage = loadTexture("gameover.jpg");
-
-    // Hiển thị ảnh toàn màn hình
     SDL_Rect rect = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
     SDL_RenderCopy(renderer, gameOverImage, nullptr, &rect);
     SDL_RenderPresent(renderer);
 
-    // Giữ màn hình Game Over trong 3 giây
     SDL_Delay(3000);
-
-    // Giải phóng bộ nhớ
     SDL_DestroyTexture(gameOverImage);
 }
+
+// Đặt lại trạng thái để chơi lại game
 void resetGame() {
     flipCount = 0;
     matchedCount = 0;
     waiting = false;
     gameStarted = true;
- justStarted = true;
+    justStarted = true;
     startTime = SDL_GetTicks();
 
-    // Reset trạng thái các lá bài
     for (int i = 0; i < TOTAL_CARDS; ++i) {
         cardShown[i] = false;
         cardMatched[i] = false;
     }
 
- shuffleBoard();
+    shuffleBoard();
     sound.playBackgroundMusic();
 }
 
+// Hàm main của chương trình
 int main(int argc, char* argv[]) {
+    // Khởi tạo SDL và SDL_image
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0 || !(IMG_Init(IMG_INIT_JPG) & IMG_INIT_JPG)) {
-        cout << "❌ Lỗi khởi tạo SDL hoặc SDL_image!" << endl;
+        cout << "Loi khoi tao SDL hoac SDL_image!" << endl;
         return -1;
     }
 
+    // Khởi tạo hệ thống âm thanh
     if (!sound.init()) {
-        cout << "❌ Lỗi khởi tạo âm thanh!" << endl;
+        cout << "Loi khoi tao am thanh!" << endl;
         return -1;
     }
+
     // Khởi tạo SDL_ttf
     if (TTF_Init() == -1) {
-        cout << "SDL_ttf could not initialize! SDL_ttf Error: " << TTF_GetError() << endl;
+        cout << "SDL_ttf khong the khoi tao! Loi: " << TTF_GetError() << endl;
         return 1;
     }
 
-    // Load font
-    TTF_Font* font = TTF_OpenFont("arial.ttf", 28);  // Cần đúng đường dẫn file
+    // Load font chữ
+    TTF_Font* font = TTF_OpenFont("arial.ttf", 28);
     if (!font) {
-        cout << "Failed to load font! SDL_ttf Error: " << TTF_GetError() << endl;
+        cout << "Khong the tai font! Loi: " << TTF_GetError() << endl;
         return 1;
     }
 
-    sound.playBackgroundMusic();  // Phát nhạc nền khi vào game
+    sound.playBackgroundMusic();
 
     window = SDL_CreateWindow("Memory Card Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
@@ -300,84 +318,82 @@ int main(int argc, char* argv[]) {
     bool running = true;
     SDL_Event e;
 
- while (running) {
-    while (SDL_PollEvent(&e)) {
-        if (e.type == SDL_QUIT) {
-            running = false;
-        }
+    while (running) {
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_QUIT) {
+                running = false;
+            }
 
-        // 🔁 Nhấn R để chơi lại
-        if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_r) {
-           resetGame();
-        }
+            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_r) {
+                resetGame();
+            }
 
-        if (!gameStarted && e.type == SDL_MOUSEBUTTONDOWN) {
-            int x = e.button.x;
-            int y = e.button.y;
+            if (!gameStarted && e.type == SDL_MOUSEBUTTONDOWN) {
+                int x = e.button.x;
+                int y = e.button.y;
 
-            // 👇 Xử lý nút start
-            int btnX = (SCREEN_WIDTH - BUTTON_WIDTH) / 2;
-            int btnY = (SCREEN_HEIGHT - BUTTON_HEIGHT) / 2 + 100;
-            if (x >= btnX && x <= btnX + BUTTON_WIDTH && y >= btnY && y <= btnY + BUTTON_HEIGHT) {
-                gameStarted = true;
-                flipCount = 0;
-                startTime = SDL_GetTicks();
-                justStarted = true;  // ✅ THÊM DÒNG NÀY
-                sound.playBackgroundMusic();
-                SDL_FlushEvent(SDL_MOUSEBUTTONDOWN);  // 🧹 Xóa sự kiện bấm chuột đó
+                int btnX = (SCREEN_WIDTH - BUTTON_WIDTH) / 2;
+                int btnY = (SCREEN_HEIGHT - BUTTON_HEIGHT) / 2 + 100;
+                if (x >= btnX && x <= btnX + BUTTON_WIDTH && y >= btnY && y <= btnY + BUTTON_HEIGHT) {
+                    gameStarted = true;
+                    flipCount = 0;
+                    startTime = SDL_GetTicks();
+                    justStarted = true;
+                    sound.playBackgroundMusic();
+                    SDL_FlushEvent(SDL_MOUSEBUTTONDOWN);
+                }
+            }
+
+            if (gameStarted && e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT) {
+                handleMouseClick(e.button.x, e.button.y);
             }
         }
 
-        if (gameStarted && e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT) {
-            handleMouseClick(e.button.x, e.button.y);
-        }
-    }
-
-    if (!gameStarted) {
-        renderStartScreen();
-    } else {
-        // ⏳ Kiểm tra thời gian còn lại
-        Uint32 elapsedTime = (SDL_GetTicks() - startTime) / 1000;
-        int countdown = MAX_TIME - elapsedTime;
-
-        if (countdown <= 0) {
-            renderGameOverScreen();
-            SDL_Delay(2000);
-            gameStarted = false;  // ⬅️ Không thoát game, quay lại màn hình start
-            flipCount = 0;
-            fill(flipped.begin(), flipped.end(), false);
-        }
-
-        if (waiting && SDL_GetTicks() - waitStart > 1000) {
-            checkMatch();
-        }
-
-        if (checkWin()) {
-            sound.stopBackgroundMusic();
-            sound.playWinSound();
-            renderWinScreen();
-            saveHighScore(flipCount);
-            SDL_Delay(2000);
-            gameStarted = false;  // ⬅️ Không thoát game, quay lại màn hình start
-            flipCount = 0;
-            fill(flipped.begin(), flipped.end(), false);
+        if (!gameStarted) {
+            renderStartScreen();
         } else {
-            renderGame();
+            Uint32 elapsedTime = (SDL_GetTicks() - startTime) / 1000;
+            int countdown = MAX_TIME - elapsedTime;
+
+            if (countdown <= 0) {
+                renderGameOverScreen();
+                SDL_Delay(2000);
+                gameStarted = false;
+                flipCount = 0;
+                fill(flipped.begin(), flipped.end(), false);
+            }
+
+            if (waiting && SDL_GetTicks() - waitStart > 1000) {
+                checkMatch();
+            }
+
+            if (checkWin()) {
+                sound.stopBackgroundMusic();
+                sound.playWinSound();
+                renderWinScreen();
+                saveHighScore(flipCount);
+                SDL_Delay(2000);
+                gameStarted = false;
+                flipCount = 0;
+                fill(flipped.begin(), flipped.end(), false);
+            } else {
+                renderGame();
+            }
         }
+
+        SDL_Delay(16);
     }
 
-    SDL_Delay(16);
+    // Giải phóng tài nguyên
+    sound.cleanUp();
+    SDL_DestroyTexture(startButtonImage);
+    SDL_DestroyTexture(winnerImage);
+    for (SDL_Texture* tex : images) {
+        SDL_DestroyTexture(tex);
+    }
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    IMG_Quit();
+    SDL_Quit();
+    return 0;
 }
-
-sound.cleanUp();
-
-SDL_DestroyTexture(startButtonImage);
-SDL_DestroyTexture(winnerImage);
-for (SDL_Texture* tex : images) {
-    SDL_DestroyTexture(tex);
-}
-SDL_DestroyRenderer(renderer);
-SDL_DestroyWindow(window);
-IMG_Quit();
-SDL_Quit();
-return 0;}
