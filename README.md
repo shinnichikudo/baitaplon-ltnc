@@ -2,6 +2,16 @@
 # 📖 Giới thiệu
 Memory Card Game là một trò chơi lật hình được xây dựng bằng C++ và SDL2, nơi người chơi cần tìm ra tất cả các cặp hình giống nhau trong khoảng thời gian giới hạn. Trò chơi bao gồm hiệu ứng hình ảnh, âm thanh, hệ thống điểm số cao và một giao diện trực quan giúp người chơi có trải nghiệm tốt nhất.  
 
+# 0. Cách tải game
+## a. Cách 1: Không bao gồm code.
+Tải game (được nén thành .zip) tại link sau: https://github.com/shinnichikudo/baitaplon-ltnc/releases/tag/final
+Cách này tiết kiệm bộ nhớ và thời gian tải đi rất nhiều 
+Giải nén game vào một thư mục và bật main.exe
+
+## b. Cách 2: Bao gồm code và có thể biên dịch.
+: Clone repo này về (hơi nặng do có cả lịch sử các phiên bản).
+Hoặc Chọn Code -> Download Zip 
+
 # 🛠️ Cài đặt
 ## 1. Yêu cầu hệ thống  
 Hệ điều hành: Windows / Linux / macOS  
@@ -53,10 +63,38 @@ Nếu đạt số lần lật thấp nhất, điểm sẽ được lưu vào hig
 Hết 60 giây mà chưa ghép xong tất cả cặp hình.
 Hiển thị màn hình "Game Over" và tùy chọn chơi lại.
 ![Game Over](gameover.jpg)
-##🎨 Đồ họa game
+## 🎨 Đồ họa game
 Game sử dụng hình ảnh được tải bằng SDL2_image.
 Màn hình nền, các thẻ bài, nút bấm đều được hiển thị bằng SDL_Texture.
-Hiệu ứng chuyển đổi giữa các màn hình giúp tăng trải nghiệm mượt mà.
+Hiệu ứng chuyển đổi giữa các màn hình giúp tăng trải nghiệm mượt mà.  
+
+# 🎮 Các tính năng nổi bật (nâng cao ) của Memory Card Game (Game Lật Hình)
+## ⏱️ Hệ thống đếm thời gian
+Game có đồng hồ đếm giờ giúp người chơi tự đánh giá hiệu suất chơi của mình. Thời gian hoàn thành nhanh sẽ là một tiêu chí để vượt qua các kỷ lục trước đó.
+
+## 🏆 Lưu High Score (kỷ lục)
+Kết quả chơi tốt nhất sẽ được lưu lại để người chơi có thể so sánh, cải thiện kỹ năng và đặt mục tiêu cao hơn.
+
+ ## 🔊 Hiệu ứng âm thanh
+Game tích hợp hệ thống âm thanh (qua file sound.h) để tạo hiệu ứng khi lật bài, ghép đúng hoặc kết thúc trận. Điều này giúp tăng trải nghiệm tương tác cho người chơi.
+
+## 🖼️ Hình ảnh trực quan
+Giao diện đồ họa dễ nhìn, với các màn hình riêng như:
+
+Màn hình chính (Start Screen)
+Màn hình chiến thắng (Win)
+Màn hình Game Over
+## Hình nền và hiệu ứng khi lật bài
+🃏 Lật bài mượt mà, logic đơn giản
+Người chơi chỉ cần click chuột để lật bài. Các thuật toán xử lý việc so khớp cặp hình và hiệu ứng thời gian chờ khi lật 2 lá khác nhau.
+
+## 💾 Chạy được trên nhiều nền tảng
+Game được lập trình bằng C++ sử dụng thư viện SDL2, SDL_image, SDL_ttf... nên có thể build và chạy được trên cả Windows lẫn Linux.
+
+## 🧩 Cấu trúc mã nguồn rõ ràng, dễ mở rộng
+Toàn bộ game được chia thành các file .cpp, .h riêng biệt, giúp người khác dễ hiểu, dễ chỉnh sửa và phát triển thêm tính năng mới.  
+
+
 # 📝 Giới thiệu source code
 Source code được tổ chức đơn giản, dễ hiểu, phù hợp với cả người mới học lập trình game bằng C++ và SDL2. Dưới đây là tổng quan các thành phần và hàm chính:
 ## 📁 Cấu trúc thư mục dự án
@@ -131,5 +169,28 @@ Source code được tổ chức đơn giản, dễ hiểu, phù hợp với c�
 
 | Hàm              | Tham số              | Chức năng                                                       |
 |------------------|----------------------|-----------------------------------------------------------------|
-| `loadTexture()`  | `const string& path` | Tải hình ảnh từ file và trả về `SDL_Texture*`.                 |
+| `loadTexture()`  | `const string& path` | Tải hình ảnh từ file và trả về `SDL_Texture*`.                 |  
+
+
+
+
+
+# Mã nguồn kham khảo  
+KHÔNG CÓ  
+
+# Các tài nguyên ảnh được tạo với Printerest  
+# AI hỗ trợ : Chat GPT , Google Studio Ai 
+## cụ thể :  
+gợi ý các hàm cần có  
+Tìm và sửa lỗi (Debugging Assistant)
+hướng dẫn cài đặt sdl mixer,sdl tft  
+hướng dẫn viết 1 số hàm nằm ngoài chương trình học như hàm âm thanh , chữ viết,...  
+Tối ưu mã và cải thiện hiệu năng  
+Gợi ý cách tránh lặp code, cải thiện tốc độ vẽ màn hình.  
+Hỗ trợ Viết tài liệu README
+# Các tài nguyên âm thanh  
+được lấy từ web https://tiengdong.com/  
+# Thank you so much for your support. Wishing you good health and all the best always!
+
+
 
