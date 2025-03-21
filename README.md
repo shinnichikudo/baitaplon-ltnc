@@ -1,4 +1,5 @@
 # Memory Card Game (SDL2)  
+# Demo : https://www.youtube.com/watch?v=nwsQB1ujEGI
 # 📖 Giới thiệu
 Memory Card Game là một trò chơi lật hình được xây dựng bằng C++ và SDL2, nơi người chơi cần tìm ra tất cả các cặp hình giống nhau trong khoảng thời gian giới hạn. Trò chơi bao gồm hiệu ứng hình ảnh, âm thanh, hệ thống điểm số cao và một giao diện trực quan giúp người chơi có trải nghiệm tốt nhất.  
 
