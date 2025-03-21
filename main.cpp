@@ -32,13 +32,14 @@ SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
 SDL_Texture* startButtonImage = nullptr;
 SDL_Texture* winnerImage = nullptr;
+SDL_Texture* backImage = nullptr;
 
 vector<SDL_Texture*> images;
 vector<int> board(ROWS * COLS, -1);  // Lưu thứ tự bài đã xáo
 vector<bool> flipped(ROWS * COLS, false);  // Trạng thái lật của các lá bài
 
 TTF_Font* font = nullptr;  // Font chữ
-SDL_Color textColor = {0, 0, 0, 255}; // Màu chữ đen
+SDL_Color textColor = {255, 0, 0, 255}; // Màu chữ đỏ
 
 int firstCard = -1, secondCard = -1;
 bool waiting = false;
@@ -139,12 +140,19 @@ void renderGame() {
             SDL_Rect rect = { j * CARD_SIZE, i * CARD_SIZE, CARD_SIZE, CARD_SIZE };
 
             if (flipped[index] && board[index] >= 0 && images[board[index]]) {
+                // Hiển thị mặt trước của thẻ
                 SDL_RenderCopy(renderer, images[board[index]], nullptr, &rect);
             } else {
-                SDL_SetRenderDrawColor(renderer, 200, 200, 200, 200);
-                SDL_RenderFillRect(renderer, &rect);
+                // Hiển thị mặt sau (backImage) nếu có, nếu không thì vẽ hình chữ nhật xám
+                if (backImage) {
+                    SDL_RenderCopy(renderer, backImage, nullptr, &rect);
+                } else {
+                    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 200);
+                    SDL_RenderFillRect(renderer, &rect);
+                }
             }
 
+            // Viền đen cho mỗi thẻ
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
             SDL_RenderDrawRect(renderer, &rect);
         }
@@ -153,6 +161,7 @@ void renderGame() {
     renderTime(startTime);
     SDL_RenderPresent(renderer);
 }
+
 
 // Kiểm tra xem hai lá bài có khớp không
 void checkMatch() {
@@ -308,7 +317,7 @@ int main(int argc, char* argv[]) {
 
     startButtonImage = loadTexture("image7.png");
     winnerImage = loadTexture("winner.png");
-
+    backImage = loadTexture("back.jpg");
     for (int i = 0; i < TOTAL_CARDS; i++) {
         string path = "image" + to_string(i + 1) + ".jpg";
         images.push_back(loadTexture(path));
