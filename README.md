@@ -179,7 +179,13 @@ Source code được tổ chức đơn giản, dễ hiểu, phù hợp với c�
 # Mã nguồn kham khảo  
 KHÔNG CÓ  
 
-# Các tài nguyên ảnh được tạo với Printerest  
+# Các tài nguyên ảnh 
+https://in.pinterest.com/search/pins/?q=nh%C3%A2n%20v%E1%BA%ADt%20trong%20conan&rs=rs&source_id=AParVcoy&eq=&etslf=1735 (8 ảnh đầu )
+https://in.pinterest.com/
+https://www.flaticon.com/free-icon/winner_3508754
+https://www.pngkit.com/view/u2w7r5o0o0q8w7r5_game-over-white-red-b-game-over-button/
+https://chatgpt.com/
+
 # AI hỗ trợ : Chat GPT , Google Studio Ai 
 ## cụ thể :  
 gợi ý các hàm cần có  
@@ -190,7 +196,10 @@ Tối ưu mã và cải thiện hiệu năng
 Gợi ý cách tránh lặp code, cải thiện tốc độ vẽ màn hình.  
 Hỗ trợ Viết tài liệu README
 # Các tài nguyên âm thanh  
-được lấy từ web https://tiengdong.com/  
+https://tiengdong.com/nhac-nen-boc-tham-trung-thuong 
+https://tiengdong.com/
+https://tiengdong.com/nhac-doc-ve-cha-cha-cha
+ 
 # Thank you so much for your support. Wishing you good health and all the best always!
 
 
