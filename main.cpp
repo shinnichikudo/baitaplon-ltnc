@@ -27,7 +27,9 @@ bool cardShown[ROWS * COLS] = {false};
 bool cardMatched[ROWS * COLS] = {false};
 bool replayRequested = false;
 bool justStarted = false;
-
+SDL_Texture* pauseTexture = nullptr;
+bool isPaused = false;
+Uint32 pausedTime = 0;
 SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
 SDL_Texture* startButtonImage = nullptr;
@@ -49,7 +51,6 @@ bool gameWon = false;
 int flipCount = 0;  // Biến đếm số lần lật bài
 
 SoundManager sound;  // Đối tượng quản lý âm thanh
-
 // Hàm tải ảnh và tạo texture
 SDL_Texture* loadTexture(const string& path) {
     SDL_Texture* texture = IMG_LoadTexture(renderer, path.c_str());
@@ -168,6 +169,8 @@ void checkMatch() {
     if (board[firstCard] != board[secondCard]) {
         flipped[firstCard] = false;
         flipped[secondCard] = false;
+    } else {
+        sound.playFlipCorrectSound(); // 🔊 Phát âm thanh khi ghép đúng
     }
     firstCard = secondCard = -1;
     waiting = false;
@@ -283,6 +286,30 @@ void resetGame() {
     sound.playBackgroundMusic();
 }
 
+void togglePause() {
+    if (!isPaused) {
+        isPaused = true;
+        pausedTime = SDL_GetTicks() - startTime;
+    } else {
+        startTime = SDL_GetTicks() - pausedTime;
+        isPaused = false;
+    }
+}
+
+void renderPauseScreen() {
+    SDL_Texture* pauseTexture = IMG_LoadTexture(renderer, "pause.jpg");
+    if (!pauseTexture) {
+        std::cerr << "Failed to load pause image: " << IMG_GetError() << std::endl;
+        return;
+    }
+
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, pauseTexture, NULL, NULL); // Hiển thị ảnh toàn màn hình
+    SDL_RenderPresent(renderer);
+
+    SDL_DestroyTexture(pauseTexture);
+}
+
 // Hàm main của chương trình
 int main(int argc, char* argv[]) {
     // Khởi tạo SDL và SDL_image
@@ -318,6 +345,7 @@ int main(int argc, char* argv[]) {
     startButtonImage = loadTexture("image7.png");
     winnerImage = loadTexture("winner.png");
     backImage = loadTexture("back.jpg");
+    pauseTexture = loadTexture("pause.jpg");
     for (int i = 0; i < TOTAL_CARDS; i++) {
         string path = "image" + to_string(i + 1) + ".jpg";
         images.push_back(loadTexture(path));
@@ -327,15 +355,42 @@ int main(int argc, char* argv[]) {
     bool running = true;
     SDL_Event e;
 
-    while (running) {
-        while (SDL_PollEvent(&e)) {
-            if (e.type == SDL_QUIT) {
-                running = false;
-            }
+   while (running) {
+    while (SDL_PollEvent(&e)) {
+        if (e.type == SDL_QUIT) {
+            running = false;
+        }
 
-            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_r) {
+        if (e.type == SDL_KEYDOWN) {
+            if (e.key.keysym.sym == SDLK_r) {
                 resetGame();
             }
+
+            if (e.key.keysym.sym == SDLK_p) {
+                 togglePause();
+            }
+        }
+
+        // Nếu đang tạm dừng, bỏ qua các sự kiện khác
+        if (isPaused) {
+        renderPauseScreen();
+        SDL_RenderPresent(renderer);
+
+        // Đợi sự kiện mới (chặn vòng lặp để tránh nháy)
+        SDL_Event pauseEvent;
+        while (SDL_WaitEvent(&pauseEvent)) {
+            if (pauseEvent.type == SDL_KEYDOWN && pauseEvent.key.keysym.sym == SDLK_p) {
+               isPaused = false;
+                startTime = SDL_GetTicks() - pausedTime; // Tiếp tục thời gian
+                break;
+            }
+            if (pauseEvent.type == SDL_QUIT) {
+                running = false;
+                break;
+            }
+        }
+    }
+
 
             if (!gameStarted && e.type == SDL_MOUSEBUTTONDOWN) {
                 int x = e.button.x;
@@ -365,6 +420,7 @@ int main(int argc, char* argv[]) {
             int countdown = MAX_TIME - elapsedTime;
 
             if (countdown <= 0) {
+                    sound.playLoseSound();
                 renderGameOverScreen();
                 SDL_Delay(2000);
                 gameStarted = false;
@@ -373,9 +429,8 @@ int main(int argc, char* argv[]) {
             }
 
             if (waiting && SDL_GetTicks() - waitStart > 1000) {
-                checkMatch();
-            }
-
+            checkMatch();
+}
             if (checkWin()) {
                 sound.stopBackgroundMusic();
                 sound.playWinSound();
@@ -402,6 +457,7 @@ int main(int argc, char* argv[]) {
     }
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    SDL_DestroyTexture(pauseTexture);
     IMG_Quit();
     SDL_Quit();
     return 0;
