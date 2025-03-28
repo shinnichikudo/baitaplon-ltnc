@@ -94,6 +94,18 @@ Game được lập trình bằng C++ sử dụng thư viện SDL2, SDL_image, S
 
 ## 🧩 Cấu trúc mã nguồn rõ ràng, dễ mở rộng
 Toàn bộ game được chia thành các file .cpp, .h riêng biệt, giúp người khác dễ hiểu, dễ chỉnh sửa và phát triển thêm tính năng mới.  
+## Tạm dừng - Pause Game  
+Nhấn phím P để tạm dừng trò chơi.
+
+
+Khi pause, ảnh nền sẽ thay đổi để hiển thị giao diện "Tạm dừng".  
+
+
+Thời gian sẽ dừng lại, giữ nguyên trạng thái các lá bài đang mở.  
+
+
+Nhấn P lần nữa để tiếp tục trò chơi từ thời điểm dừng lại.  
+
 
 
 # 📝 Giới thiệu source code
@@ -130,7 +142,7 @@ Source code được tổ chức đơn giản, dễ hiểu, phù hợp với c�
 | `renderTime()`           | `Uint32 startTime`                   | Hiển thị đồng hồ đếm ngược (giới hạn thời gian chơi).                    |
 | `renderWinScreen()`      | –                                    | Hiển thị màn hình chiến thắng và số lần lật, best record.                |
 | `renderGameOverScreen()` | –                                    | Hiển thị màn hình "Game Over" khi hết thời gian.                         |
-
+| `renderPauseScreen()`    | –                                    | Hiển thị màn hình tạm dừng khi nhấn P, giữ nguyên trạng thái hiện tại.   |
 ---
 
 ### 🧠 Nhóm logic game
@@ -142,7 +154,7 @@ Source code được tổ chức đơn giản, dễ hiểu, phù hợp với c�
 | `checkWin()`             | –                | Kiểm tra xem người chơi đã lật đúng toàn bộ thẻ hay chưa.               |
 | `resetGame()`            | –                | Đặt lại trạng thái game để chơi lại.                                     |
 | `handleMouseClick()`     | `int x, int y`   | Xử lý khi người chơi click chuột vào vị trí (x, y).                      |
-
+| `togglePause()`     | –      | Dừng/tái tiếp tục trò chơi khi nhấn phím P.                   |
 ---
 
 ### 🔊 Nhóm âm thanh (`sound.h`)
